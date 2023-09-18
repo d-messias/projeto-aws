@@ -310,18 +310,24 @@ Resources:
                     - Endpoint.Address
                   - |
                     '/g" wp-config.php
-              mode: '000500'
+              mode: '000644' # Permissões 644 para arquivos
               owner: root
               group: root
           commands:
-            01_configure_wordpress:
+            01_install_wp:
+              command: sh /tmp/wp_install.sh
+            02_set_permissions:
+              command: sh /tmp/wp_permissions.sh
+            03_configure_wordpress:
               command: /tmp/create-wp-config
               cwd: /var/www/html/wordpress
+              permissions: '000755' # Permissões 755 para diretórios
           services:
             sysvinit:
               httpd:
                 enabled: 'true'
                 ensureRunning: 'true'
+                permissions: '000755' # Permissões 755 para diretórios
     Properties:
       ImageId: ami-09bee01cc997a78a6
       InstanceType: !Ref InstanceType
@@ -351,62 +357,6 @@ Resources:
             - '         --region '
             - !Ref 'AWS::Region'
             - |+      
-
-      
-        
-
-        # Metadata:
-        #    "AWS::CloudFormation::Init":
-          #   configSets:
-          #     install_and_configure:
-          #       - install
-          #       - configure
-
-            # install:
-            #   packages:
-            #     yum:
-            #       httpd: []
-            #       php: []
-            #       php-mysql: []
-            #       mysql: []
-
-            #   sources:
-            #     /var/www/html: "http://wordpress.org/latest.tar.gz"
-
-            # files:
-            #   /tmp/wp_install.sh:
-            #     content: |
-            #       #!/bin/bash
-            #       tar -xzf /var/www/html/latest.tar.gz -C /var/www/html
-            #       cp /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
-            #       sed -i "s/'database_name_here'/'${DBName}'/g" /var/www/html/wordpress/wp-config.php
-            #       sed -i "s/'username_here'/'${DBUser}'/g" /var/www/html/wordpress/wp-config.php
-            #       sed -i "s/'password_here'/'${DBPassword}'/g" /var/www/html/wordpress/wp-config.php
-            #       sed -i "s/'localhost'/'"Fn::GetAtt": ["DBInstance", "Endpoint.Address"]"'/g" /var/www/html/wordpress/wp-config.php
-
-            #   /tmp/wp_permissions.sh:
-            #     content: |
-            #       #!/bin/bash
-            #       chown -R apache:apache /var/www/html/wordpress
-            #       find /var/www/html/wordpress -type d -exec chmod 755 {} \;
-            #       find /var/www/html/wordpress -type f -exec chmod 644 {} \;
-
-            # commands:
-            #   01_install_wp:
-            #     command: sh /tmp/wp_install.sh
-            #   02_set_permissions:
-            #     command: sh /tmp/wp_permissions.sh
-
-            # configure:
-            #   files:
-            #     /etc/httpd/conf.d/wordpress.conf:
-            #       content: |
-            #         Alias /wordpress /var/www/html/wordpress
-            #         <Directory /var/www/html/wordpress>
-            #           AllowOverride All
-            #           Order allow,deny
-            #           Allow from all
-            #         </Directory}
 
   WebServerGroup:
     Type: "AWS::AutoScaling::AutoScalingGroup"
